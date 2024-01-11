@@ -20,7 +20,7 @@ static ssize_t (*libc_recvfrom)(
     int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 static ssize_t (*libc_send)(int sockfd, const void *buf, size_t len, int flags);
 static ssize_t (*libc_sendto)(int sockfd, const void *buf, size_t len, int flags,
-                              const struct sockaddr *dest_addr, socklen_t addrlen);
+    const struct sockaddr *dest_addr, socklen_t addrlen);
 static int (*libc_socket)(int domain, int type, int protocol);
 static int (*libc_listen)(int sockfd, int backlog);
 
@@ -123,7 +123,7 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags)
 }
 
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr,
-               socklen_t addrlen)
+    socklen_t addrlen)
 {
     if (should_malloc_fail()) {
         errno = ENOMEM;

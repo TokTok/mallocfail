@@ -36,4 +36,3 @@ install : mallocfail.so
 	$(INSTALL) mallocfail.so ${DESTDIR}${prefix}/lib/mallocfail.so
 	$(INSTALL) mallocfail ${DESTDIR}${prefix}/bin/mallocfail
 	sed -i "s#/usr/local#${prefix}#" ${DESTDIR}${prefix}/bin/mallocfail
-
