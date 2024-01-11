@@ -1,11 +1,12 @@
 #define _GNU_SOURCE
 
-#include "mallocfail.h"
-#include <stdio.h>
 #include <dlfcn.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
+#include "mallocfail.h"
 
 void *(*libc_malloc)(size_t) = NULL;
 void *(*libc_calloc)(size_t, size_t) = NULL;
@@ -16,83 +17,81 @@ static int init_state = 0;
 static char tmpbuf[1024];
 static size_t tmppos = 0;
 
-
 static void init(void)
 {
-	if(init_state) return;
+    if (init_state)
+        return;
 
-	init_state = 1;
-	libc_malloc = dlsym(RTLD_NEXT, "malloc");
-	libc_calloc = dlsym(RTLD_NEXT, "calloc");
-	libc_realloc = dlsym(RTLD_NEXT, "realloc");
+    init_state = 1;
+    libc_malloc = dlsym(RTLD_NEXT, "malloc");
+    libc_calloc = dlsym(RTLD_NEXT, "calloc");
+    libc_realloc = dlsym(RTLD_NEXT, "realloc");
 
-	if(!libc_malloc || !libc_calloc || !libc_realloc){
-		// FIXME - it would be nice to print an error here
-		exit(1);
-	}
+    if (!libc_malloc || !libc_calloc || !libc_realloc) {
+        write(2, "failed to locate malloc, calloc, or realloc\n",
+            sizeof("failed to locate malloc, calloc, or realloc\n") - 1);
+        exit(42);
+    }
 
-	init_state = 2;
+    init_state = 2;
 }
-
 
 void *malloc(size_t size)
 {
-	void *retptr;
+    void *retptr;
 
-	if(init_state != 2){
-		if(init_state == 1){
-			if(tmppos + size >= sizeof(tmpbuf)) exit(1);
+    if (init_state != 2) {
+        if (init_state == 1) {
+            if (tmppos + size >= sizeof(tmpbuf))
+                exit(23);
 
-			retptr = tmpbuf + tmppos;
-			tmppos += size;
-			return retptr;
-		}else{
-			init();
-		}
-	}
+            retptr = tmpbuf + tmppos;
+            tmppos += size;
+            return retptr;
+        } else {
+            init();
+        }
+    }
 
-	if(force_libc || !should_malloc_fail()){
-		return libc_malloc(size);
-	}else{
-		return NULL;
-	}
+    if (force_libc || !should_malloc_fail()) {
+        return libc_malloc(size);
+    } else {
+        return NULL;
+    }
 }
-
 
 void *calloc(size_t nmemb, size_t size)
 {
-	void *ptr;
-	int i;
+    void *ptr;
+    int i;
 
-	if(init_state != 2){
-		if(init_state == 1){
-			ptr = malloc(nmemb*size);
-			for(i=0; i<nmemb*size; i++){
-				((char *)ptr)[i] = '\0';
-			}
-			return ptr;
-		}else{
-			init();
-		}
-	}
+    if (init_state != 2) {
+        if (init_state == 1) {
+            ptr = malloc(nmemb * size);
+            for (i = 0; i < nmemb * size; i++) {
+                ((char *)ptr)[i] = '\0';
+            }
+            return ptr;
+        } else {
+            init();
+        }
+    }
 
-	if(force_libc || !should_malloc_fail()){
-		return libc_calloc(nmemb, size);
-	}else{
-		return NULL;
-	}
+    if (force_libc || !should_malloc_fail()) {
+        return libc_calloc(nmemb, size);
+    } else {
+        return NULL;
+    }
 }
-
 
 void *realloc(void *ptr, size_t size)
 {
-	if(init_state != 2) init();
+    if (init_state != 2)
+        init();
 
-	if(force_libc || !should_malloc_fail()){
-		return libc_realloc(ptr, size);
-	}else{
-		return NULL;
-	}
+    if (force_libc || !should_malloc_fail()) {
+        return libc_realloc(ptr, size);
+    } else {
+        return NULL;
+    }
 }
-
-

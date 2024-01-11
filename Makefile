@@ -21,7 +21,7 @@ mf_test.o : mf_test.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 mallocfail.so : mallocfail.o memory_funcs.o sha3.o
-	$(CC) -shared -o $@ $^ ${LDFLAGS} -fPIC -ldl -lbacktrace
+	$(CC) -shared -o $@ $^ ${LDFLAGS} -fPIC -ldl -lunwind
 
 mf_test : mf_test.o
 	$(CC) -o $@ $^ ${LDFLAGS}
@@ -36,4 +36,3 @@ install : mallocfail.so
 	$(INSTALL) mallocfail.so ${DESTDIR}${prefix}/lib/mallocfail.so
 	$(INSTALL) mallocfail ${DESTDIR}${prefix}/bin/mallocfail
 	sed -i "s#/usr/local#${prefix}#" ${DESTDIR}${prefix}/bin/mallocfail
-
